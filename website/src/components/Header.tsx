@@ -22,7 +22,15 @@ const Github = (props: any) => (
   </svg>
 );
 
-export function Header({ lang = 'zh', toggleLang }: { lang?: 'zh' | 'en', toggleLang?: () => void }) {
+export function Header({
+  lang = 'zh',
+  toggleLang,
+  searchQuery = '',
+}: {
+  lang?: 'zh' | 'en',
+  toggleLang?: () => void,
+  searchQuery?: string,
+}) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [theme, setTheme] = React.useState<'light' | 'dark'>('dark');
   const homeHref = sitePath();
@@ -90,14 +98,16 @@ export function Header({ lang = 'zh', toggleLang }: { lang?: 'zh' | 'en', toggle
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <div className="w-full flex-1 md:w-auto md:flex-none">
-            <div className="relative">
+            <form action={sitePath('/search')} method="get" className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
+                name="q"
+                defaultValue={searchQuery}
                 placeholder={t('search.placeholder')}
                 className="flex h-9 w-full md:w-[300px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-9"
               />
-            </div>
+            </form>
           </div>
           <nav className="flex items-center space-x-2">
             <button 

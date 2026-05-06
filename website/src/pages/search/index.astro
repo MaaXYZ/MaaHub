@@ -1,0 +1,25 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { SearchApp } from '../../components/SearchApp';
+import { getCollection } from 'astro:content';
+import { getAllSkills } from '../../lib/skills';
+
+const pipelines = await getCollection('pipelines');
+const customs = await getCollection('customs');
+const experiences = await getCollection('experiences');
+
+const skillsData = await getAllSkills();
+const pipelinesData = pipelines.map((pipeline: typeof pipelines[number]) => pipeline.data);
+const customsData = customs.map((custom: typeof customs[number]) => custom.data);
+const experiencesData = experiences.map((experience: typeof experiences[number]) => experience.data);
+---
+
+<Layout title="MaaHub - Search">
+  <SearchApp
+    client:only="react"
+    skillsData={skillsData}
+    pipelinesData={pipelinesData}
+    customsData={customsData}
+    experiencesData={experiencesData}
+  />
+</Layout>

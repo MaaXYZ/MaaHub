@@ -1,0 +1,26 @@
+{
+  "id": "xlxyvergil/map-navigation",
+  "title": "大地图导航",
+  "description": "基于 OpenCV 的反向模板匹配导航模块。解决通过屏幕截图计算摄像机视角位置并自动滑动的问题。适用于大地图关卡定位场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["fgo", "navigation", "opencv", "map"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "general_navigation_action.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "navigation",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [
+    "maa framework sdk",
+    "opencv-python",
+    "numpy"
+  ],
+  "externalTools": []
+}

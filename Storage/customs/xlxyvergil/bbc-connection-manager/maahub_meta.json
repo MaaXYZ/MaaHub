@@ -1,0 +1,24 @@
+{
+  "id": "xlxyvergil/bbc-connection-manager",
+  "title": "BBC TCP 连接管理器",
+  "description": "TCP 通信基础设施模块。解决双向通信中的命令发送、异步回调和消息队列管理问题。适用于需要与外部 TCP 服务建立稳定连接的自定义 Action 开发场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["bbc", "tcp", "communication", "infrastructure"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "bbc_connection_manager.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "infrastructure",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [
+    "psutil"
+  ],
+  "externalTools": []
+}

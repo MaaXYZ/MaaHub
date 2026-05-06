@@ -1,0 +1,25 @@
+{
+  "id": "xlxyvergil/bbc-process-control",
+  "title": "BBC 进程控制",
+  "description": "外部进程生命周期管理模块。解决进程检测、强制终止和智能重启中的状态同步问题。适用于需要独立控制外部进程启动和连接的场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["bbc", "process", "lifecycle", "control"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "bbc_start.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "process-management",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [
+    "maa framework sdk",
+    "psutil"
+  ],
+  "externalTools": []
+}

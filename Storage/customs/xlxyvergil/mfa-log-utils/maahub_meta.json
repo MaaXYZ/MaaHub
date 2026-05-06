@@ -1,0 +1,22 @@
+{
+  "id": "xlxyvergil/mfa-log-utils",
+  "title": "MFA 日志工具",
+  "description": "Custom Action 日志输出适配模块。将 Python 日志重定向到 GUI 界面显示，支持 info/warn/error/debug 等级格式化。适用于需要在 UI 中查看 Custom Action 执行日志的场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["log", "mfa", "gui", "utils"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "mfaalog.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "utils",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [],
+  "externalTools": []
+}

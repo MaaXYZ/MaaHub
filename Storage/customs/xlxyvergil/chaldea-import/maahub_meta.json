@@ -1,0 +1,24 @@
+{
+  "id": "xlxyvergil/chaldea-import",
+  "title": "Chaldea 队伍导入",
+  "description": "远程数据解析与格式转换模块。解决从 HTTP API 获取配置数据并转换为本地格式的问题。适用于需要集成第三方平台数据的场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["fgo", "chaldea", "import", "team"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "chaldea_import_action.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "import",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [
+    "maa framework sdk"
+  ],
+  "externalTools": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "xlxyvergil/mission-solver",
+  "title": "任务求解器",
+  "description": "任务匹配与路径规划算法模块。解决基于 API 数据的条件解析和最优路径求解问题。适用于需要自动化任务规划的场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["fgo", "solver", "mission", "planning"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "solver.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "solver",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [],
+  "externalTools": []
+}

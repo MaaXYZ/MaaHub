@@ -1,0 +1,24 @@
+{
+  "id": "xlxyvergil/bbc-battle-system",
+  "title": "BBC 战斗系统",
+  "description": "基于 TCP 接口的事件驱动任务执行模块。解决外部进程通信中的弹窗响应、异常重试和状态监控问题。适用于需要与外部 TCP 服务交互的自动化任务场景。",
+  "author": "xlxyvergil",
+  "source": "MaaFgo",
+  "sourceGithub": "https://github.com/xlxyvergil/MaaFgo",
+  "tags": ["fgo", "battle", "bbc", "automation"],
+  "createdAt": "2026-05-06",
+  "updatedAt": "2026-05-06",
+  "version": "1.0.0",
+  "mfwVersion": "5.10.4",
+  "entry": "bbc_action.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "category": "battle",
+  "language": "python",
+  "runtime": "python 3.12.9",
+  "dependencies": [
+    "maa framework sdk"
+  ],
+  "externalTools": []
+}

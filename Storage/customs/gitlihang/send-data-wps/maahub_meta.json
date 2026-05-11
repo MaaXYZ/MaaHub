@@ -1,0 +1,20 @@
+{
+  "id": "gitlihang/send-data-wps",
+  "title": "发送数据到云文档",
+  "description": "解决收集数据问题，将客户端数据发送到云文档中。不用搭建服务器",
+  "author": "gitlihang",
+  "source": "Maa_MHXY_MG",
+  "sourceGithub": "https://github.com/gitlihang/Maa_MHXY_MG",
+  "tags": ["data", "wps"],
+  "createdAt": "2026-05-11",
+  "updatedAt": "2026-05-11",
+  "version": "1.0.0",
+  "mfwVersion": "5.X",
+  "entry": "main.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "language": "python",
+  "runtime": "python 3.12.10",
+  "dependencies": ["requests","json"]
+}

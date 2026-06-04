@@ -1,6 +1,7 @@
-# PR Send Data wps
+# UI日志界面上输出OCR结果
 
-在UI日志界面上显示OCR结果
+## 使用案例：答题
+对于答题，在答题完成后，通过ocr识别答题结果（例：正确率：9/10），输出到ui方便用户查看。
 
 ## 功能
 
@@ -15,7 +16,7 @@
 
 ## 使用方式
 ### 输出及click动作（暂时只写了click动作，其他动作暂未写）。
- """
+```
 "接受进入的副本名称": {
         "recognition": "OCR",
         "expected": [
@@ -48,9 +49,10 @@
         action_key: 动作名称，用于判断动作类型，如Click、Move等
         recognition_name: task任务名称,用于指定识别任务名称，返回该节点的结果。
         return_text: 输出的描述，用于指定返回的描述
-        click_target: 点击坐标，格式为[x1, y1, x2, y2]，仅在action_key为Click时使用。如果不提供click_target，则默认点击识别结果的中心位置。
+        click_target: 点击坐标，格式为[x1, y1, w, h]，仅在action_key为Click时使用。如果不提供click_target，则默认点击识别结果的中心位置。
 
-    """
+```
+
 ### 只输出，无动作
 ```
 "活动-三界奇缘-正确率": {
@@ -83,7 +85,8 @@
 
 ## 注意事项
 
- - 注意的值"custom_action_param"
+ - 注意"custom_action_param"参数
 
 
 feat(customs): 新增在UI日志界面上显示OCR结果。
+perf(customs):优化readme及任务说明。

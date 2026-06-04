@@ -1,0 +1,20 @@
+{
+  "id": "gitlihang/output-ocr-result-log",
+  "title": "在UI日志界面上显示OCR结果",
+  "description": "在UI界面上显示OCR识别结果，方便用户查看任务进度和结果。",
+  "author": "gitlihang",
+  "source": "Maa_MHXY_MG",
+  "sourceGithub": "https://github.com/gitlihang/Maa_MHXY_MG",
+  "tags": ["ocr-result", "log", "ui"],
+  "createdAt": "2026-06-04",
+  "updatedAt": "2026-06-04",
+  "version": "1.0.0",
+  "mfwVersion": "5.X",
+  "entry": "main.py",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "custom",
+  "language": "python",
+  "runtime": "python 3.12.10",
+  "dependencies": ["loguru","json"]
+}

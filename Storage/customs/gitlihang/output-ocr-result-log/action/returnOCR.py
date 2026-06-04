@@ -13,12 +13,12 @@ class ReturnOCR(CustomAction):
             "action_key": "Click",
             "recognition_name": "识别输出测试",
             "return_text": "输出的描述"
-            "click_target": []  # 点击坐标，格式为[x1, y1, x2, y2]，仅在action_key为Click时使用
+            "click_target": []  # 点击坐标，格式为[x1, y1, w, h]，仅在action_key为Click时使用
         }
         action_key: 动作名称，用于判断动作类型，如Click、Move等
         recognition_name: task任务名称,用于指定识别任务名称，返回该节点的结果。
         return_text: 输出的描述，用于指定返回的描述
-        click_target: 点击坐标，格式为[x1, y1, x2, y2]，仅在action_key为Click时使用。如果不提供click_target，则默认点击识别结果的中心位置。
+        click_target: 点击坐标，格式为[x1, y1, w, h]，仅在action_key为Click时使用。如果不提供click_target，则默认点击识别结果的中心位置。
 
     """
     def run(

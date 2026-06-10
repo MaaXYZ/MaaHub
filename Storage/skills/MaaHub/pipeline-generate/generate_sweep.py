@@ -12,15 +12,55 @@ pipeline-generate ROI Sweep 测试工具。
     然后用 run_pipeline 逐个测试（手动）
 """
 
+import os
+import re
 import sys
 import json
 from pathlib import Path
 
-# 720p 硬编码常量
-SCREEN_W, SCREEN_H = 720, 1280
+# 默认基准分辨率
+DEFAULT_SCREEN_W, DEFAULT_SCREEN_H = 720, 1280
 
 # 项目根目录：脚本位于 .claude/skills/pipeline-generate/
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = None
+
+def find_project_root() -> Path:
+    env_root = os.getenv("MAAHUB_ROOT") or os.getenv("PROJECT_ROOT")
+    if env_root:
+        return Path(env_root).resolve()
+
+    current = Path(__file__).resolve().parent
+    for parent in [current, *current.parents]:
+        if (parent / ".git").exists() or (parent / "package.json").exists() or (parent / "README.md").exists():
+            return parent
+
+    raise RuntimeError("无法定位项目根目录，请设置 MAAHUB_ROOT 或 PROJECT_ROOT 环境变量")
+
+
+def get_screen_size(width: int | None, height: int | None) -> tuple[int, int]:
+    if width is not None or height is not None:
+        if width is None or height is None:
+            raise ValueError("必须同时提供 --screen-width 和 --screen-height")
+        return width, height
+
+    env_size = os.getenv("SCREEN_SIZE")
+    if env_size:
+        parts = env_size.lower().split("x")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            return int(parts[0]), int(parts[1])
+
+    env_w = os.getenv("SCREEN_WIDTH")
+    env_h = os.getenv("SCREEN_HEIGHT")
+    if env_w and env_h and env_w.isdigit() and env_h.isdigit():
+        return int(env_w), int(env_h)
+
+    return DEFAULT_SCREEN_W, DEFAULT_SCREEN_H
+
+
+def sanitize_filename(name: str) -> str:
+    safe = re.sub(r"[\\/]+", "_", name)
+    safe = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff _\-]+", "_", safe)
+    return safe.strip("_ ") or "target_text"
 
 
 def parse_expands(arg: str) -> list[int]:
@@ -36,13 +76,15 @@ def parse_box(arg: str) -> tuple[int, int, int, int]:
     return tuple(parts)
 
 
-def compute_roi(box: tuple[int, int, int, int], expand: int) -> list[int]:
-    """计算扩大后的 ROI，限制不超出屏幕边界"""
+def compute_roi(box: tuple[int, int, int, int], expand: int, screen_w: int, screen_h: int) -> list[int]:
+    """计算扩大后的 ROI，限制不超出屏幕边界；宽高非法时回退到原始 box。"""
     x, y, w, h = box
     roi_x = max(0, x - expand)
     roi_y = max(0, y - expand)
-    roi_w = min(SCREEN_W - roi_x, w + 2 * expand)
-    roi_h = min(SCREEN_H - roi_y, h + 2 * expand)
+    roi_w = min(screen_w - roi_x, w + 2 * expand)
+    roi_h = min(screen_h - roi_y, h + 2 * expand)
+    if roi_w <= 0 or roi_h <= 0:
+        return [x, y, w, h]
     return [roi_x, roi_y, roi_w, roi_h]
 
 
@@ -51,11 +93,13 @@ def make_sweep_pipeline(
     box: tuple[int, int, int, int],
     expands: list[int],
     output_path: str,
+    screen_w: int,
+    screen_h: int,
 ) -> dict:
     """生成 ROI sweep 测试 pipeline"""
     nodes = {}
     for e in expands:
-        roi = compute_roi(box, e)
+        roi = compute_roi(box, e, screen_w, screen_h)
         node_name = f"Sweep_{target_text}_e{e}"
         nodes[node_name] = {
             "recognition": "OCR",
@@ -78,12 +122,17 @@ def main():
     target_text = sys.argv[1]
     box = parse_box(sys.argv[2])
     expands = parse_expands(sys.argv[3]) if len(sys.argv) > 3 else [0, 5, 10, 15, 20, 25, 30, 50, 100]
+    screen_w, screen_h = get_screen_size(None, None)
+    global PROJECT_ROOT
+    PROJECT_ROOT = find_project_root()
 
+    safe_target_text = sanitize_filename(target_text)
+    expand_suffix = "_".join(str(v) for v in expands)
     output_dir = PROJECT_ROOT / "generate_sweep"
     output_dir.mkdir(exist_ok=True)
-    output_path = output_dir / f"{target_text}.json"
+    output_path = output_dir / f"{safe_target_text}_{expand_suffix}.json"
 
-    nodes = make_sweep_pipeline(target_text, box, expands, str(output_path))
+    nodes = make_sweep_pipeline(target_text, box, expands, str(output_path), screen_w, screen_h)
 
     print(f"生成 sweep pipeline: {output_path}")
     print(f"目标文字: {target_text}")

@@ -13,6 +13,7 @@ pipeline-generate: 自动生成 OCR 文本节点并合并到指定 pipeline。
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -24,12 +25,43 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# 720p 硬编码常量
-SCREEN_W, SCREEN_H = 720, 1280
+# 默认基准分辨率
+DEFAULT_SCREEN_W, DEFAULT_SCREEN_H = 720, 1280
 
 # 项目根目录：脚本位于 .claude/skills/pipeline-generate/generate_node.py
-# parents[0] = pipeline-generate, parents[1] = skills, parents[2] = .claude, parents[3] = project root
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = None
+
+def find_project_root() -> Path:
+    env_root = os.getenv("MAAHUB_ROOT") or os.getenv("PROJECT_ROOT")
+    if env_root:
+        return Path(env_root).resolve()
+
+    current = Path(__file__).resolve().parent
+    for parent in [current, *current.parents]:
+        if (parent / ".git").exists() or (parent / "package.json").exists() or (parent / "README.md").exists():
+            return parent
+
+    raise RuntimeError("无法定位项目根目录，请设置 MAAHUB_ROOT 或 PROJECT_ROOT 环境变量")
+
+
+def get_screen_size(width: int | None, height: int | None) -> tuple[int, int]:
+    if width is not None or height is not None:
+        if width is None or height is None:
+            raise ValueError("必须同时提供 --screen-width 和 --screen-height")
+        return width, height
+
+    env_size = os.getenv("SCREEN_SIZE")
+    if env_size:
+        parts = env_size.lower().split("x")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            return int(parts[0]), int(parts[1])
+
+    env_w = os.getenv("SCREEN_WIDTH")
+    env_h = os.getenv("SCREEN_HEIGHT")
+    if env_w and env_h and env_w.isdigit() and env_h.isdigit():
+        return int(env_w), int(env_h)
+
+    return DEFAULT_SCREEN_W, DEFAULT_SCREEN_H
 
 
 def _val(r, key):
@@ -101,13 +133,13 @@ def find_target_box(controller_id, target_text):
     return list(_val(best, "box")), _val(best, "score")
 
 
-def compute_roi(box, expand):
-    """扩大 ROI，4 边裁剪到 720p 屏幕内。"""
+def compute_roi(box, expand, screen_w: int, screen_h: int) -> list[int]:
+    """扩大 ROI，并裁剪到当前屏幕尺寸内。宽高非法时回退到原始 box。"""
     x, y, w, h = box
     roi_x = max(0, x - expand)
     roi_y = max(0, y - expand)
-    roi_w = min(SCREEN_W - roi_x, w + 2 * expand)
-    roi_h = min(SCREEN_H - roi_y, h + 2 * expand)
+    roi_w = min(screen_w - roi_x, w + 2 * expand)
+    roi_h = min(screen_h - roi_y, h + 2 * expand)
     if roi_w <= 0 or roi_h <= 0:
         return [x, y, w, h]
     return [roi_x, roi_y, roi_w, roi_h]
@@ -153,8 +185,14 @@ def main():
     parser.add_argument("--expand", type=int, default=20, help="ROI 扩边像素（推荐 20-30，可先用 generate_sweep.py 测试）")
     parser.add_argument("--post-delay", type=int, default=500)
     parser.add_argument("--timeout", type=int, default=2000)
+    parser.add_argument("--screen-width", type=int, default=None, help="屏幕宽度（默认 720，可通过环境变量 SCREEN_WIDTH 或 SCREEN_SIZE 读取）")
+    parser.add_argument("--screen-height", type=int, default=None, help="屏幕高度（默认 1280，可通过环境变量 SCREEN_HEIGHT 或 SCREEN_SIZE 读取）")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
+
+    screen_w, screen_h = get_screen_size(args.screen_width, args.screen_height)
+    global PROJECT_ROOT
+    PROJECT_ROOT = find_project_root()
 
     # 解析 pipeline 路径：相对路径基于项目根目录的 assets/resource/base/pipeline/
     path = resolve_pipeline_path(args.pipeline_file)
@@ -168,7 +206,7 @@ def main():
     # === Step 2: OCR + 算 ROI ===
     print(f"\n=== Step 2: OCR 找 '{args.target_text}' ===")
     box, score = find_target_box(ctrl, args.target_text)
-    roi = compute_roi(box, args.expand)
+    roi = compute_roi(box, args.expand, screen_w, screen_h)
     print(f"匹配: box={box}, score={score:.3f}")
     print(f"扩大 ROI (expand={args.expand}): {roi}")
 

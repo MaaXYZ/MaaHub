@@ -163,7 +163,7 @@ python .claude/skills/pipeline-generate/generate_node.py "角色" UI_RoleListPag
 | 节点 | expand | score | 备注 |
 |------|--------|-------|------|
 | `UI_RoleListPage` | **20** | 0.9997 | 中部偏左 |
-| `UI_RoleFomationPage` | **20** | 0.998 | 角色右边 |
+| `UI_RoleFormationPage` | **20** | 0.998 | 角色右边 |
 | `UI_CastlePage` | **3** | 0.997 | ⚠️ 仅 0-15 |
 | `UI_TeamPage` | **20** | 0.997 | 城堡右边 |
 | `ClickGoToArchipelago` | **20** | 0.991 | 中间大地图按钮 |

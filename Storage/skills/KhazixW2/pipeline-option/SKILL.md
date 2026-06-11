@@ -1,6 +1,6 @@
 ---
 name: pipeline-option
-description: Add runtime UI options (select/checkbox/switch/input) to interface.json. Two implementation styles: (1) wire to Python via context.get_node_data() for in-code decisions, or (2) pure pipeline_override on existing node fields (e.g. `next` array) for behavior-only changes that don't touch Python. Critical 3-place pattern: option definition + task option array + pre-defined pipeline node. Use when adding a new user-facing toggle, multi-choice selector, or custom input that must persist through MaaFramework's v2.3.0+ protocol.
+description: "Add runtime UI options (select/checkbox/switch/input) to interface.json. Two implementation styles: (1) wire to Python via context.get_node_data() for in-code decisions, or (2) pure pipeline_override on existing node fields (e.g. `next` array) for behavior-only changes that don't touch Python. Critical 3-place pattern: option definition + task option array + pre-defined pipeline node. Use when adding a new user-facing toggle, multi-choice selector, or custom input that must persist through MaaFramework's v2.3.0+ protocol."
 ---
 
 # Pipeline Option 工作流

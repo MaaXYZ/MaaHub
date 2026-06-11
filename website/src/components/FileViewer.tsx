@@ -6,6 +6,7 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { FileCode, Check, Copy } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { parseFrontmatter } from '../lib/markdown';
 
 export type DownloadFile = {
   path: string;
@@ -67,6 +68,33 @@ function getLanguage(path: string) {
 
 function isMarkdown(path: string) {
   return /\.(md|mdx)$/i.test(path);
+}
+
+function MarkdownWithMeta({ content }: { content: string }) {
+  const { meta, body } = parseFrontmatter(content);
+  return (
+    <div className="space-y-4">
+      {meta && (
+        <div className="rounded-lg border bg-muted/30 px-4 py-3">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            {Object.entries(meta).map(([key, val]) => (
+              <React.Fragment key={key}>
+                <dt className="text-muted-foreground font-medium">{key}</dt>
+                <dd className="text-foreground break-words">{val}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </div>
+      )}
+      {body.trim() && (
+        <div className="prose dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-primary prose-code:before:content-none prose-code:after:content-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            {body}
+          </ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function FileViewer({ files = [], emptyLabel }: FileViewerProps) {
@@ -140,11 +168,7 @@ export function FileViewer({ files = [], emptyLabel }: FileViewerProps) {
 
       <div className="p-6 relative group">
         {isMarkdown(activeFile.path) ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-pre:p-0 prose-pre:bg-transparent">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-              {activeFile.content}
-            </ReactMarkdown>
-          </div>
+          <MarkdownWithMeta content={activeFile.content} />
         ) : (
           <>
             <button
@@ -157,7 +181,7 @@ export function FileViewer({ files = [], emptyLabel }: FileViewerProps) {
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
-            <pre className="overflow-x-auto rounded-lg bg-[#0d1117] p-4 text-sm leading-relaxed text-slate-100">
+            <pre className="overflow-x-auto rounded-lg bg-[#0d1117] p-4 text-[0.875rem] leading-relaxed text-slate-100">
               <code ref={codeRef} className={`language-${language}`}>
                 {activeFile.content}
               </code>

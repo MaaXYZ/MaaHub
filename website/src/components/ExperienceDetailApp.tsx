@@ -10,6 +10,7 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import GithubSlugger from 'github-slugger';
 import 'highlight.js/styles/github-dark.css';
+import { parseFrontmatter } from '../lib/markdown';
 
 type DownloadFile = {
   path: string;
@@ -54,6 +55,36 @@ function extractHeadings(markdown: string): Heading[] {
     headings.push({ id, text, level });
   }
   return headings;
+}
+
+function ExperienceMarkdown({ content }: { content: string }) {
+  const { meta, body } = parseFrontmatter(content);
+  return (
+    <div className="space-y-4">
+      {meta && (
+        <div className="rounded-lg border bg-muted/30 px-4 py-3">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            {Object.entries(meta).map(([key, val]) => (
+              <React.Fragment key={key}>
+                <dt className="text-muted-foreground font-medium">{key}</dt>
+                <dd className="text-foreground break-words">{val}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </div>
+      )}
+      {body.trim() && (
+        <div className="prose dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:scroll-mt-20 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-code:before:content-none prose-code:after:content-none">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeHighlight, rehypeSlug]}
+          >
+            {body}
+          </ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // In a real app, this data would come from the astro page props (fetched from getCollection)
@@ -207,16 +238,9 @@ export function ExperienceDetailApp({ experienceId, experienceData, lang = 'zh' 
             <div className="flex-1 w-full order-2 lg:order-1 min-w-0">
               <div className="bg-card rounded-xl border shadow-sm p-6 md:p-10">
                 {(activeFile.endsWith('.md') || activeFile.endsWith('.mdx')) ? (
-                  <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:scroll-mt-20 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeHighlight, rehypeSlug]}
-                    >
-                      {currentFileContent}
-                    </ReactMarkdown>
-                  </div>
+                  <ExperienceMarkdown content={currentFileContent} />
                 ) : (
-                  <pre className="overflow-x-auto p-4 bg-muted/50 rounded-lg text-sm font-mono whitespace-pre-wrap">
+                  <pre className="overflow-x-auto p-4 bg-muted/50 rounded-lg text-[0.875rem] leading-relaxed font-mono whitespace-pre-wrap">
                     <code>{currentFileContent}</code>
                   </pre>
                 )}

@@ -1,24 +1,46 @@
 ---
 import '../styles/globals.css';
 import { getLangFromUrl } from '../i18n/utils';
+
 interface Props {
   title: string;
+  description?: string;
+  canonical?: string;
+  ogType?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title } = Astro.props;
+const { title, description, canonical, ogType = 'website', jsonLd } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const faviconHref = `${import.meta.env.BASE_URL}favicon.svg`;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const pageUrl = canonical ?? new URL(Astro.url.pathname, siteUrl).href;
+const desc = description ?? 'MaaHub - Community-driven hub for MaaFramework skills, pipelines, customs, and experiences';
 ---
 
 <!doctype html>
 <html lang={lang} class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="MaaHub" />
+    <meta name="description" content={desc} />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={faviconHref} />
+    <link rel="canonical" href={pageUrl} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:site_name" content="MaaHub" />
+
+    <!-- JSON-LD Structured Data -->
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+
     <script is:inline>
       const theme = (() => {
         if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
@@ -29,14 +51,14 @@ const faviconHref = `${import.meta.env.BASE_URL}favicon.svg`;
         }
         return 'light';
       })();
-    
+
       if (theme === 'light') {
         document.documentElement.classList.remove('dark');
       } else {
         document.documentElement.classList.add('dark');
       }
       window.localStorage.setItem('theme', theme);
-      
+
       const searchParams = new URLSearchParams(window.location.search);
       const urlLang = searchParams.get('lang');
       if (urlLang) {
@@ -46,9 +68,14 @@ const faviconHref = `${import.meta.env.BASE_URL}favicon.svg`;
         if (localLang) {
           document.documentElement.lang = localLang;
         } else {
-          document.documentElement.lang = 'zh'; // Default
+          document.documentElement.lang = 'zh';
         }
       }
+
+      // Hide SSR content once React takes over
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.seo-content').forEach(el => el.hidden = true);
+      });
     </script>
   </head>
   <body class="min-h-screen bg-background">

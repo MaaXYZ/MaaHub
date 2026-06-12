@@ -14,8 +14,71 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const { experience } = Astro.props;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "name": experience.title,
+  "headline": experience.title,
+  "description": experience.description,
+  "author": { "@type": "Person", "name": experience.author },
+  "dateModified": experience.updatedAt,
+  "dateCreated": experience.createdAt,
+  "url": `${siteUrl}${baseUrl}experiences/${experience.id}`,
+  "keywords": experience.tags?.join(', '),
+  "proficiencyLevel": experience.difficulty ?? undefined,
+  "timeRequired": experience.estimatedTime ?? undefined,
+};
 ---
 
-<Layout title={`MaaHub - ${experience.title}`}>
+<Layout
+  title={`${experience.title} - MaaHub`}
+  description={experience.description}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="seo-content container mx-auto px-4 py-8">
+    <h1>{experience.title}</h1>
+    <p>{experience.description}</p>
+
+    <dl>
+      <dt>Author</dt><dd>{experience.author}</dd>
+      {experience.difficulty && <><dt>Difficulty</dt><dd>{experience.difficulty}</dd></>}
+      {experience.estimatedTime && <><dt>Estimated Time</dt><dd>{experience.estimatedTime}</dd></>}
+      {experience.status && <><dt>Status</dt><dd>{experience.status}</dd></>}
+      <dt>Updated</dt><dd>{experience.updatedAt}</dd>
+      <dt>Created</dt><dd>{experience.createdAt}</dd>
+      {experience.tags?.length && <><dt>Tags</dt><dd>{experience.tags.join(', ')}</dd></>}
+    </dl>
+
+    {experience.chapters?.length && (
+      <section>
+        <h2>Chapters</h2>
+        <ol>
+          {experience.chapters.map((ch: { title: string; path: string }) => (
+            <li>{ch.title}</li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    {experience.downloadFiles?.length && (
+      <section>
+        <h2>Files</h2>
+        <ul>
+          {experience.downloadFiles.map((f: { path: string }) => <li>{f.path}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <p>
+      <a href="https://github.com/MaaXYZ/MaaHub" rel="noopener">Source Repository on GitHub</a>
+      {' | '}
+      <a href={`${baseUrl}experiences`}>Back to all experiences</a>
+    </p>
+  </article>
+
   <ExperienceDetailApp experienceId={id} experienceData={experience} client:only="react" />
 </Layout>

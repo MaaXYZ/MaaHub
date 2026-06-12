@@ -5,8 +5,44 @@ import { getCollection } from 'astro:content';
 
 const pipelines = await getCollection('pipelines');
 const pipelinesData = pipelines.map((pipeline: typeof pipelines[number]) => pipeline.data);
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "MaaHub Pipelines",
+  "description": "Community-contributed pipelines for MaaFramework automation",
+  "numberOfItems": pipelinesData.length,
+  "itemListElement": pipelinesData.map((p, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "name": p.title,
+    "description": p.description,
+    "url": `${siteUrl}${baseUrl}pipelines/${p.id}`,
+  })),
+};
 ---
 
-<Layout title="MaaHub - AI Pipelines">
+<Layout
+  title="Pipelines - MaaHub"
+  description={`Browse ${pipelinesData.length} community-contributed pipelines for MaaFramework automation workflows.`}
+  jsonLd={jsonLd}
+>
+  <section class="seo-content container mx-auto px-4 py-8">
+    <h1>MaaHub Pipelines</h1>
+    <p>Community-contributed pipelines for MaaFramework. {pipelinesData.length} pipelines available.</p>
+    <ul>
+      {pipelinesData.map((p) => (
+        <li>
+          <a href={`${baseUrl}pipelines/${p.id}`}><strong>{p.title}</strong></a>
+          {p.description && <span> — {p.description}</span>}
+          {p.author && <span> (by {p.author})</span>}
+          {p.tags?.length ? <span> [{p.tags.join(', ')}]</span> : null}
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <PipelinesApp client:only="react" pipelinesData={pipelinesData} />
 </Layout>

@@ -4,8 +4,46 @@ import { SkillsApp } from '../../components/SkillsApp';
 import { getAllSkills } from '../../lib/skills';
 
 const skillsData = await getAllSkills();
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "MaaHub Skills",
+  "description": "Community-contributed skills for MaaFramework AI agents",
+  "numberOfItems": skillsData.length,
+  "itemListElement": skillsData.map((skill, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "name": skill.title,
+    "description": skill.description,
+    "url": `${siteUrl}${baseUrl}skills/${skill.id}`,
+  })),
+};
 ---
 
-<Layout title="MaaHub - AI Skills">
+<Layout
+  title="Skills - MaaHub"
+  description={`Browse ${skillsData.length} community-contributed skills for MaaFramework AI agents. Find ready-to-use skills for automation, testing, and more.`}
+  jsonLd={jsonLd}
+>
+  <section class="seo-content container mx-auto px-4 py-8">
+    <h1>MaaHub Skills</h1>
+    <p>Community-contributed skills for MaaFramework. {skillsData.length} skills available.</p>
+    <ul>
+      {skillsData.map((skill) => (
+        <li>
+          <a href={`${baseUrl}skills/${skill.id}`}>
+            <strong>{skill.title}</strong>
+          </a>
+          {skill.description && <span> — {skill.description}</span>}
+          {skill.author && <span> (by {skill.author})</span>}
+          {skill.tags?.length ? <span> [{skill.tags.join(', ')}]</span> : null}
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <SkillsApp client:only="react" skillsData={skillsData} />
 </Layout>

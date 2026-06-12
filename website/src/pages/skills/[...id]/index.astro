@@ -16,8 +16,86 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const { skill } = Astro.props;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": skill.title,
+  "description": skill.description,
+  "author": { "@type": "Person", "name": skill.author },
+  "version": skill.version ?? undefined,
+  "dateModified": skill.updatedAt,
+  "dateCreated": skill.createdAt,
+  "codeRepository": "https://github.com/MaaXYZ/MaaHub",
+  "url": `${siteUrl}${baseUrl}skills/${skill.id}`,
+  "keywords": skill.tags?.join(', '),
+  "runtimePlatform": "MaaFramework",
+};
+
+const installCmd1 = `git clone https://github.com/MaaXYZ/MaaHub.git --depth=1`;
+const installCmd2 = `cp -r MaaHub/Storage/skills/${skill.id} ./your_agent_skills/`;
 ---
 
-<Layout title={`${skill.title} - MaaHub`}>
+<Layout
+  title={`${skill.title} - MaaHub`}
+  description={skill.description}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="seo-content container mx-auto px-4 py-8">
+    <h1>{skill.title}</h1>
+    <p>{skill.description}</p>
+
+    <dl>
+      <dt>Author</dt><dd>{skill.author}</dd>
+      {skill.version && <><dt>Version</dt><dd>{skill.version}</dd></>}
+      {skill.status && <><dt>Status</dt><dd>{skill.status}</dd></>}
+      <dt>Updated</dt><dd>{skill.updatedAt}</dd>
+      <dt>Created</dt><dd>{skill.createdAt}</dd>
+      {skill.tags?.length && <><dt>Tags</dt><dd>{skill.tags.join(', ')}</dd></>}
+    </dl>
+
+    {skill.whenToUse?.length && (
+      <section>
+        <h2>When to Use</h2>
+        <ul>
+          {skill.whenToUse.map((item: string) => <li>{item}</li>)}
+        </ul>
+      </section>
+    )}
+
+    {skill.allowedTools?.length && (
+      <section>
+        <h2>Allowed Tools</h2>
+        <ul>
+          {skill.allowedTools.map((tool: string) => <li>{tool}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <section>
+      <h2>Installation</h2>
+      <pre><code>{installCmd1}</code></pre>
+      <pre><code>{installCmd2}</code></pre>
+    </section>
+
+    {skill.downloadFiles?.length && (
+      <section>
+        <h2>Package Files</h2>
+        <ul>
+          {skill.downloadFiles.map((f: { path: string }) => <li>{f.path}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <p>
+      <a href="https://github.com/MaaXYZ/MaaHub" rel="noopener">Source Repository on GitHub</a>
+      {' | '}
+      <a href={`${baseUrl}skills`}>Back to all skills</a>
+    </p>
+  </article>
+
   <SkillDetailApp client:only="react" skillId={id} skillData={skill} />
 </Layout>

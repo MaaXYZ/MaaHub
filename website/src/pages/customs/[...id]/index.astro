@@ -14,8 +14,72 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const { custom } = Astro.props;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": custom.title,
+  "description": custom.description,
+  "author": { "@type": "Person", "name": custom.author },
+  "version": custom.version ?? undefined,
+  "dateModified": custom.updatedAt,
+  "dateCreated": custom.createdAt,
+  "codeRepository": "https://github.com/MaaXYZ/MaaHub",
+  "url": `${siteUrl}${baseUrl}customs/${custom.id}`,
+  "keywords": custom.tags?.join(', '),
+  "programmingLanguage": custom.language ?? undefined,
+  "runtimePlatform": custom.runtime ?? "MaaFramework",
+};
+
+const installCmd1 = `git clone https://github.com/MaaXYZ/MaaHub.git --depth=1`;
+const installCmd2 = `cp -r MaaHub/Storage/customs/${custom.id} ./your_customs/`;
 ---
 
-<Layout title={`MaaHub - ${custom.title}`}>
+<Layout
+  title={`${custom.title} - MaaHub`}
+  description={custom.description}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="seo-content container mx-auto px-4 py-8">
+    <h1>{custom.title}</h1>
+    <p>{custom.description}</p>
+
+    <dl>
+      <dt>Author</dt><dd>{custom.author}</dd>
+      {custom.version && <><dt>Version</dt><dd>{custom.version}</dd></>}
+      {custom.status && <><dt>Status</dt><dd>{custom.status}</dd></>}
+      {custom.language && <><dt>Language</dt><dd>{custom.language}</dd></>}
+      {custom.runtime && <><dt>Runtime</dt><dd>{custom.runtime}</dd></>}
+      <dt>Updated</dt><dd>{custom.updatedAt}</dd>
+      <dt>Created</dt><dd>{custom.createdAt}</dd>
+      {custom.tags?.length && <><dt>Tags</dt><dd>{custom.tags.join(', ')}</dd></>}
+      {custom.dependencies?.length && <><dt>Dependencies</dt><dd>{custom.dependencies.join(', ')}</dd></>}
+    </dl>
+
+    <section>
+      <h2>Installation</h2>
+      <pre><code>{installCmd1}</code></pre>
+      <pre><code>{installCmd2}</code></pre>
+    </section>
+
+    {custom.downloadFiles?.length && (
+      <section>
+        <h2>Package Files</h2>
+        <ul>
+          {custom.downloadFiles.map((f: { path: string }) => <li>{f.path}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <p>
+      <a href="https://github.com/MaaXYZ/MaaHub" rel="noopener">Source Repository on GitHub</a>
+      {' | '}
+      <a href={`${baseUrl}customs`}>Back to all customs</a>
+    </p>
+  </article>
+
   <CustomDetailApp customId={id} customData={custom} client:only="react" />
 </Layout>

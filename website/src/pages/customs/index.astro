@@ -5,8 +5,44 @@ import { getCollection } from 'astro:content';
 
 const customs = await getCollection('customs');
 const customsData = customs.map((custom: typeof customs[number]) => custom.data);
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "MaaHub Custom Resources",
+  "description": "Community-contributed custom resources for MaaFramework",
+  "numberOfItems": customsData.length,
+  "itemListElement": customsData.map((c, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "name": c.title,
+    "description": c.description,
+    "url": `${siteUrl}${baseUrl}customs/${c.id}`,
+  })),
+};
 ---
 
-<Layout title="MaaHub - AI Customs">
+<Layout
+  title="Customs - MaaHub"
+  description={`Browse ${customsData.length} community-contributed custom resources for MaaFramework.`}
+  jsonLd={jsonLd}
+>
+  <section class="seo-content container mx-auto px-4 py-8">
+    <h1>MaaHub Custom Resources</h1>
+    <p>Community-contributed custom resources for MaaFramework. {customsData.length} items available.</p>
+    <ul>
+      {customsData.map((c) => (
+        <li>
+          <a href={`${baseUrl}customs/${c.id}`}><strong>{c.title}</strong></a>
+          {c.description && <span> — {c.description}</span>}
+          {c.author && <span> (by {c.author})</span>}
+          {c.tags?.length ? <span> [{c.tags.join(', ')}]</span> : null}
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <CustomsApp client:only="react" customsData={customsData} />
 </Layout>

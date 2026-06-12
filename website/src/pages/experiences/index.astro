@@ -5,8 +5,44 @@ import { getCollection } from 'astro:content';
 
 const experiences = await getCollection('experiences');
 const experiencesData = experiences.map((experience: typeof experiences[number]) => experience.data);
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "MaaHub Experiences",
+  "description": "Community-contributed tutorials and guides for MaaFramework",
+  "numberOfItems": experiencesData.length,
+  "itemListElement": experiencesData.map((e, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "name": e.title,
+    "description": e.description,
+    "url": `${siteUrl}${baseUrl}experiences/${e.id}`,
+  })),
+};
 ---
 
-<Layout title="MaaHub - AI Experiences">
+<Layout
+  title="Experiences - MaaHub"
+  description={`Browse ${experiencesData.length} community-contributed tutorials and guides for MaaFramework.`}
+  jsonLd={jsonLd}
+>
+  <section class="seo-content container mx-auto px-4 py-8">
+    <h1>MaaHub Experiences</h1>
+    <p>Community-contributed tutorials and guides for MaaFramework. {experiencesData.length} experiences available.</p>
+    <ul>
+      {experiencesData.map((e) => (
+        <li>
+          <a href={`${baseUrl}experiences/${e.id}`}><strong>{e.title}</strong></a>
+          {e.description && <span> — {e.description}</span>}
+          {e.author && <span> (by {e.author})</span>}
+          {e.tags?.length ? <span> [{e.tags.join(', ')}]</span> : null}
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <ExperiencesApp client:only="react" experiencesData={experiencesData} />
 </Layout>

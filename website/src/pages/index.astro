@@ -12,9 +12,41 @@ const skillsData = await getAllSkills();
 const pipelinesData = pipelines.map((pipeline: typeof pipelines[number]) => pipeline.data);
 const customsData = customs.map((custom: typeof customs[number]) => custom.data);
 const experiencesData = experiences.map((experience: typeof experiences[number]) => experience.data);
+const baseUrl = import.meta.env.BASE_URL;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MaaHub",
+  "url": siteUrl,
+  "description": "Community-driven hub for MaaFramework resources — skills, pipelines, custom tools, and tutorials.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": `${siteUrl}${baseUrl}search?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
 ---
 
-<Layout title="MaaHub">
+<Layout
+  title="MaaHub - MaaFramework Skills & Resources Hub"
+  description="Community-driven hub for MaaFramework resources. Browse skills, pipelines, custom tools, and tutorials contributed by the community."
+  jsonLd={jsonLd}
+>
+  <section class="seo-content container mx-auto px-4 py-8">
+    <h1>MaaHub — MaaFramework Community Resource Hub</h1>
+    <p>Browse community-contributed resources for MaaFramework automation.</p>
+    <nav>
+      <ul>
+        <li><a href={`${baseUrl}skills`}>Skills ({skillsData.length})</a> — Reusable AI agent skills</li>
+        <li><a href={`${baseUrl}pipelines`}>Pipelines ({pipelinesData.length})</a> — Automation workflows</li>
+        <li><a href={`${baseUrl}customs`}>Custom Resources ({customsData.length})</a> — Custom tools and extensions</li>
+        <li><a href={`${baseUrl}experiences`}>Experiences ({experiencesData.length})</a> — Tutorials and guides</li>
+      </ul>
+    </nav>
+  </section>
+
   <App
     client:only="react"
     skillsData={skillsData}

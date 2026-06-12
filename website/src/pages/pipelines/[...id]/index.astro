@@ -14,8 +14,68 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const { pipeline } = Astro.props;
+const siteUrl = import.meta.env.SITE ?? 'https://maahub.github.io';
+const baseUrl = import.meta.env.BASE_URL;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": pipeline.title,
+  "description": pipeline.description,
+  "author": { "@type": "Person", "name": pipeline.author },
+  "version": pipeline.version ?? undefined,
+  "dateModified": pipeline.updatedAt,
+  "dateCreated": pipeline.createdAt,
+  "codeRepository": "https://github.com/MaaXYZ/MaaHub",
+  "url": `${siteUrl}${baseUrl}pipelines/${pipeline.id}`,
+  "keywords": pipeline.tags?.join(', '),
+  "runtimePlatform": "MaaFramework",
+};
+
+const installCmd1 = `git clone https://github.com/MaaXYZ/MaaHub.git --depth=1`;
+const installCmd2 = `cp -r MaaHub/Storage/pipelines/${pipeline.id} ./your_pipelines/`;
 ---
 
-<Layout title={`${pipeline.title} - MaaHub`}>
+<Layout
+  title={`${pipeline.title} - MaaHub`}
+  description={pipeline.description}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="seo-content container mx-auto px-4 py-8">
+    <h1>{pipeline.title}</h1>
+    <p>{pipeline.description}</p>
+
+    <dl>
+      <dt>Author</dt><dd>{pipeline.author}</dd>
+      {pipeline.version && <><dt>Version</dt><dd>{pipeline.version}</dd></>}
+      {pipeline.status && <><dt>Status</dt><dd>{pipeline.status}</dd></>}
+      <dt>Updated</dt><dd>{pipeline.updatedAt}</dd>
+      <dt>Created</dt><dd>{pipeline.createdAt}</dd>
+      {pipeline.tags?.length && <><dt>Tags</dt><dd>{pipeline.tags.join(', ')}</dd></>}
+    </dl>
+
+    <section>
+      <h2>Installation</h2>
+      <pre><code>{installCmd1}</code></pre>
+      <pre><code>{installCmd2}</code></pre>
+    </section>
+
+    {pipeline.downloadFiles?.length && (
+      <section>
+        <h2>Package Files</h2>
+        <ul>
+          {pipeline.downloadFiles.map((f: { path: string }) => <li>{f.path}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <p>
+      <a href="https://github.com/MaaXYZ/MaaHub" rel="noopener">Source Repository on GitHub</a>
+      {' | '}
+      <a href={`${baseUrl}pipelines`}>Back to all pipelines</a>
+    </p>
+  </article>
+
   <PipelineDetailApp client:only="react" pipelineId={id} pipelineData={pipeline} />
 </Layout>

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import { FileCode, Check, Copy } from 'lucide-react';
+import { FileCode, Check, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { parseFrontmatter } from '../lib/markdown';
 
@@ -105,7 +105,32 @@ export function FileViewer({ files = [], emptyLabel }: FileViewerProps) {
   const initialTab = orderedFiles[0]?.path ?? '';
   const [activeTab, setActiveTab] = React.useState(initialTab);
   const codeRef = React.useRef<HTMLElement | null>(null);
+  const tabsRef = React.useRef<HTMLDivElement>(null);
   const [copied, setCopied] = React.useState(false);
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+  const [canScrollRight, setCanScrollRight] = React.useState(false);
+
+  const updateScrollState = () => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  React.useEffect(() => {
+    updateScrollState();
+    const el = tabsRef.current;
+    el?.addEventListener('scroll', updateScrollState);
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      el?.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [orderedFiles]);
+
+  const scrollTabs = (dir: 'left' | 'right') => {
+    tabsRef.current?.scrollBy({ left: dir === 'left' ? -160 : 160, behavior: 'smooth' });
+  };
 
   const handleCopy = async () => {
     if (!activeFile?.content) return;
@@ -146,24 +171,44 @@ export function FileViewer({ files = [], emptyLabel }: FileViewerProps) {
 
   return (
     <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-      <div className="border-b bg-muted/40 px-4 flex overflow-x-auto">
-        {orderedFiles.map((file) => (
+      <div className="flex border-b bg-muted/40">
+        {canScrollLeft && (
           <button
-            key={file.path}
             type="button"
-            onClick={() => setActiveTab(file.path)}
-            className={cn(
-              'inline-flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-              activeFile.path === file.path
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-            title={file.path}
+            onClick={() => scrollTabs('left')}
+            className="flex-shrink-0 px-1.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
           >
-            <FileCode className="h-4 w-4 flex-shrink-0" />
-            <span>{file.path}</span>
+            <ChevronLeft className="h-4 w-4" />
           </button>
-        ))}
+        )}
+        <div ref={tabsRef} className="flex flex-1 min-w-0 overflow-x-auto scrollbar-hide px-4">
+          {orderedFiles.map((file) => (
+            <button
+              key={file.path}
+              type="button"
+              onClick={() => setActiveTab(file.path)}
+              className={cn(
+                'inline-flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                activeFile.path === file.path
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              title={file.path}
+            >
+              <FileCode className="h-4 w-4 flex-shrink-0" />
+              <span>{file.path}</span>
+            </button>
+          ))}
+        </div>
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={() => scrollTabs('right')}
+            className="flex-shrink-0 px-1.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="p-6 relative group">

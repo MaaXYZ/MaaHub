@@ -1,0 +1,19 @@
+{
+  "id": "overflow65537/color-match-ocr-only-rec",
+  "title": "ColorMatch + OCR only_rec 精准识文",
+  "description": "先用颜色匹配定位文字颜色区域，再对该区域开启 only_rec 做 OCR，提升低准确率或易混淆场景下的识别稳定性。",
+  "author": "overflow65537",
+  "source": "MAA_Punish",
+  "sourceGithub": "https://github.com/MaaXYZ/MaaHub",
+  "tags": ["pipeline", "ColorMatch", "OCR", "only_rec", "And"],
+  "createdAt": "2026-06-28",
+  "updatedAt": "2026-06-28",
+  "version": "0.1.0",
+  "mfwVersion": "5.10.4",
+  "entry": "pipeline.json",
+  "readme": "./README.md",
+  "status": "stable",
+  "type": "pipeline",
+  "category": "recognition",
+  "externalTools": []
+}

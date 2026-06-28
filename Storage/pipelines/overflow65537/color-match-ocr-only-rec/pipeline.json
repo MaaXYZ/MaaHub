@@ -1,0 +1,90 @@
+{
+    "检查是否存在数值": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "_文字颜色",
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": [884, 162, 260, 55],
+                                "lower": [240, 240, 240],
+                                "upper": [255, 255, 255],
+                                "count": 10
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": "_文字颜色",
+                                "expected": "^(?!^0$).+$",
+                                "only_rec": true
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "没有数值": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "_文字颜色",
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": [884, 162, 260, 55],
+                                "lower": [240, 240, 240],
+                                "upper": [255, 255, 255],
+                                "count": 10
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": "_文字颜色",
+                                "expected": "^0$",
+                                "only_rec": true
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "最终状态但没有数值": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "检查是否是最终状态",
+                    "没有数值"
+                ]
+            }
+        }
+    },
+    "需要进行任务": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "不是最终状态",
+                    "最终状态但没有数值"
+                ]
+            }
+        },
+        "next": ["任务入口"]
+    },
+    "检查是否是最终状态": {},
+    "不是最终状态": {},
+    "任务入口": {}
+}

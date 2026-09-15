@@ -47,11 +47,13 @@ CMP requires Node >= 22.13 (`npm i -g create-maa-project`, or `npx create-maa-pr
 explicit flags — never rely on interactive prompts, and never let an agent drive the TUI:
 
 ```bash
-npx create-maa-project@latest ./new-project --template agent \
-  --slug m9a --name "M9A" --controller Adb,Win32 --license AGPL-3.0-or-later \
+npx create-maa-project@latest ./my-project --template agent \
+  --slug my-project --name "我的项目" --controller Adb,Win32 \
   --add dev-tools --add github --yes --no-interactive
 ```
 
+- Replace these values with your own project's identity; `--slug` is the ASCII project ID written to
+  `project.slug` and to `interface.json` `name`, while `--name` is only the display label.
 - `--template pipeline|agent`; `--controller` kinds are `Adb`, `Win32`, `MacOS`, `PlayCover`, `Gamepad`, `Linux`.
 - Set `CREATE_MAA_PROJECT_OCR_SOURCE=submodule|download` explicitly. Otherwise the OCR layout depends on
   whether Git is available in the creation directory, so the same command builds different projects on
@@ -86,9 +88,12 @@ npx create-maa-project@latest ./new-project --template agent \
 - **Set `project.interfaceUnmanaged: true`** when the old file is heavily hand-tuned (M9A does this). CMP
   then never writes it, and you own every edit.
 
-Keep `name` and `version` correct either way: `tools/build-release.mjs` refuses to package when
-`interface.json` `name` does not match the release artifact slug, or when `version` is not a release tag
-such as `v0.1.0`. `--sync version --version X` and `--sync display-name --name Y` keep them aligned.
+Keep `name` and `version` correct either way. `interface.json` `name` is the ASCII project slug — the same
+string as `maa-project.json` `project.slug`, and the value `tools/build-release.mjs` compares it against —
+while the display name only goes to `label`. Packaging refuses to run when `name` disagrees with that slug,
+or when `version` is not a release tag such as `v0.1.0`. Archive filenames are derived from the display name
+(spaces become hyphens), so the two strings differ by design: `--sync version` aligns the version, while
+`--sync display-name` rewrites only `label`.
 
 ### 4. Configure maa-project.json
 

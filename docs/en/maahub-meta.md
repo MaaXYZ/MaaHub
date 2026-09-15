@@ -4,7 +4,7 @@ This document defines the `maahub_meta.json` specification used by all MaaHub en
 
 The canonical schema file is located at:
 
-- [docs/schema/maahub-meta.schema.json](/D:/_Projects/maahub/docs/schema/maahub-meta.schema.json)
+- [docs/schema/maahub-meta.schema.json](/docs/schema/maahub-meta.schema.json)
 
 ## Basic Format
 

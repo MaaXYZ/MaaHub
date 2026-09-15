@@ -4,7 +4,7 @@
 
 当前正式 schema 文件位于：
 
-- [docs/schema/maahub-meta.schema.json](/D:/_Projects/maahub/docs/schema/maahub-meta.schema.json)
+- [docs/schema/maahub-meta.schema.json](/docs/schema/maahub-meta.schema.json)
 
 ## 基础格式
 

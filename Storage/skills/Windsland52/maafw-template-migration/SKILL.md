@@ -1,79 +1,179 @@
 ---
 name: maafw-template-migration
-description: Migrate a legacy MaaFramework project to the create-maa-project scaffold. Use when moving an old MAA-style project with assets/ + deps/ structure and install_*.py CI scripts to the CMP template (maa-project.json, build-release.mjs, sync-runtime.mjs).
+description: Migrate a legacy MaaFramework project (assets/ + deps/ layout, install_*.py packaging CI, hand-written interface.json) onto the create-maa-project (CMP) scaffold, and re-sync a project that was migrated against an older CMP. Use when moving an old MAA-style project to maa-project.json + add-on managed templates, when enabling add-ons (dev-tools, github, agent, resource-pack) on an existing project, or when a migrated project needs --doctor / --sync / --update. Trigger even when the user just says "迁移到新模板", "换成 create-maa-project 结构", or "CMP 项目升级".
 ---
 
 # MaaFramework Project Template Migration
 
-Guide for migrating legacy MaaFW projects to the create-maa-project (CMP) scaffold.
+Guide for moving legacy MaaFW projects onto the [create-maa-project](https://github.com/Windsland52/create-maa-project)
+(CMP) scaffold, and for re-syncing a project that was migrated against an older CMP.
+
+Verified against CMP 3.5.1 and MaaFramework 5.13.0. CMP has restructured repeatedly (add-ons in 3.3.0,
+bundled Python runtime in 3.5.0), so treat any migration note older than this file as suspect.
 
 ## When to use
 
-- Old project has `assets/` (resource + interface.json), `deps/` (MaaFramework binaries), `install*.py` (packaging scripts, possibly under `tools/` or `tools/ci/`)
-- Moving to CMP's `maa-project.json` + `tools/build-release.mjs` + `tools/sync-runtime.mjs`
+- Old project has `assets/` (resource + interface.json), `deps/` (MaaFramework binaries), `install*.py`
+  packaging scripts, and a hand-written `interface.json`
+- Target is CMP's layout: `maa-project.json` + `interface.json` + `resource/base/` + `tasks/`, maintained
+  by `--add` / `--sync` / `--update` / `--doctor`
+- A previously migrated project needs to be brought up to the current CMP (add-ons, Python runtime, schema v2)
+
+## What CMP generates now
+
+CMP writes a small always-on **base** plus opt-in **add-ons**. Know which is which before copying files:
+`managed` files are refreshed by `--update`/`--sync`; `once` files are written at creation and then belong
+to the project.
+
+| Layer | Files |
+|---|---|
+| base (always) | `maa-project.json`, `interface.json`, `tasks/`, `resource/base/` (`default_pipeline.json`, `pipeline/`, `image/`, `model/ocr/`), `maatools.config.mts`, `.editorconfig`, `.gitattributes`, `.gitignore`, `README*`, `LICENSE` |
+| `dev-tools` | `package.json`, `pnpm-workspace.yaml`, `.node-version`, `.prettierrc.mjs`, `.prettierignore`, `tools/validate-schema.mjs`, `tools/schema/*` |
+| `vscode` | `.vscode/settings.json`, `extensions.json`, `tasks.json` (+ `launch.json` for agent projects) |
+| `github` | `.github/workflows/{release,check,package-smoke}.yml`, `tools/build-release.mjs`, `tools/sync-runtime.mjs`; adds `release:dry-run`, `sync:runtime` scripts |
+| `agent` | `agent/` (`main.py`, `agent_runtime.py`, `custom/`, `utils/`), `pyproject.toml`, `requirements.in`, `requirements.txt`, `uv.lock` |
+| `resource-pack` | `resource/<slug>/` plus the `resources` entry in `maa-project.json` and `interface.json` |
+| optional | `git-cliff`, `auto-format`, `optimize-images`, `community`, `dependabot`, `schema-sync` |
+
+Add-on dependencies resolve automatically: `vscode`, `github`, `agent` require `dev-tools`; `agent` also
+requires `vscode`; `git-cliff`, `auto-format`, `optimize-images`, `community`, `dependabot`, `schema-sync`
+require `github`. Since 3.3.0 `--add dev-tools` no longer writes `.vscode/` — ask for `--add vscode`.
 
 ## Migration workflow
 
-### 1. Scaffold a fresh CMP project
+### 1. Scaffold explicitly
 
-In a new directory, run CMP to generate a clean project skeleton:
+CMP requires Node >= 22.13 (`npm i -g create-maa-project`, or `npx create-maa-project@latest`). Run with
+explicit flags — never rely on interactive prompts, and never let an agent drive the TUI:
 
 ```bash
-pnpm dlx create-maa-project@latest
+npx create-maa-project@latest ./new-project --template agent \
+  --slug m9a --name "M9A" --controller Adb,Win32 --license AGPL-3.0-or-later \
+  --add dev-tools --add github --yes --no-interactive
 ```
 
-Select template (agent or pipeline-only), GUI types, OCR source, etc. This generates `maa-project.json`, `interface.json`, `tools/build-release.mjs`, `tools/sync-runtime.mjs`, `.github/workflows/release.yml`, `package.json`, `.gitignore`, and other boilerplate. Keep these generated files as the base — do not overwrite them with old project files.
+- `--template pipeline|agent`; `--controller` kinds are `Adb`, `Win32`, `MacOS`, `PlayCover`, `Gamepad`, `Linux`.
+- Set `CREATE_MAA_PROJECT_OCR_SOURCE=submodule|download` explicitly. Otherwise the OCR layout depends on
+  whether Git is available in the creation directory, so the same command builds different projects on
+  different machines.
+- Add `--report` on maintenance commands and parse stdout as JSON (`pending`, `suggestedCommands`, `written`,
+  `doctor.checks`, `backupId`).
+- CMP ships its own agent skill and an MCP mode (`--mcp --root <dir>`). Install the skill for day-to-day
+  maintenance instead of recreating its guidance here; this skill only covers the migration itself.
 
-### 2. Migrate old content into the scaffolded structure
-
-Bring over only project-specific content from the old project:
+### 2. Map old content into the scaffold
 
 | Old | New | Notes |
 |---|---|---|
-| `assets/resource/` | `resource/base/` | Drop `assets/`, rename `resource` to `base` |
-| `assets/resource_bilibili/` | `resource/bilibili/` | Same pattern for each variant |
-| `assets/interface.json` | `interface.json` (root) | Overwrite the CMP-generated one, but keep the `version` field CMP added |
-| `tasks/` | `tasks/` | Usually direct copy |
-| Old agent code | `agent/` | If using agent template; update hardcoded paths |
+| `assets/resource/` | `resource/base/` | Drop the `assets/` wrapper |
+| `assets/resource_<variant>/` | `resource/<variant>/` | Declare with `--add resource-pack <slug> --label "<label>"` |
+| `assets/interface.json` | `interface.json` (root) | Merge, do not blind-copy — see below |
+| `tasks/` | `tasks/` | Direct copy, then keep `import` entries in `interface.json` pointing at them |
+| `assets/logo.ico` (wherever it lives) | `logo.ico` at repo root | Required for package icons — see pitfalls |
+| Old agent code | `agent/` | Update hardcoded paths; the entry point is `agent/main.py` |
+| Hot-update data under `resource/` | top-level `data/` | Anything that is not part of the MaaFW bundle leaves `resource/` |
+| `deps/` | delete | Runtime assets come from `--update runtime:mfa` / `sync:runtime` |
+| `install*.py` | delete | Replaced by `tools/build-release.mjs` from the `github` add-on |
 
-### 3. Configure maa-project.json
+### 3. Decide who owns interface.json
 
-Fill in project-specific settings: GUI types and channels, resource packs, controllers, OCR source, Python version. CMP generates a template but it needs real values.
+`interface.json` is written `once` by CMP and then only partially maintained:
 
-### 4. Extract non-MaaFW-bundle content from resource
+- **Keep it CLI-managed** when the old file is mostly derived from the configuration. `--sync metadata`
+  repairs controller IDs (including the pre-rename `Android` / `WlRoots` spellings) and their `type`, leaves
+  `label`, `attach_resource_path`, `icon`, `option`, per-type blocks, tuned `display_short_side`, and
+  controllers the config cannot express untouched. `--doctor` reports drift.
+- **Set `project.interfaceUnmanaged: true`** when the old file is heavily hand-tuned (M9A does this). CMP
+  then never writes it, and you own every edit.
 
-Old projects often keep everything under `resource/` — images, pipeline JSON, AND hot-update data. In the new structure, anything that is not part of the MaaFW bundle (images, models, pipeline) should be pulled out of `resource/`. For example, if old `resource/data/` contains hot-update data, it moves to top-level `data/`. Whether this data involves manifest caching depends on the project — CMP does not assume either way.
+Keep `name` and `version` correct either way: `tools/build-release.mjs` refuses to package when
+`interface.json` `name` does not match the release artifact slug, or when `version` is not a release tag
+such as `v0.1.0`. `--sync version --version X` and `--sync display-name --name Y` keep them aligned.
 
-### 5. Clean up obsolete paths
+### 4. Configure maa-project.json
 
-- `deps/` directory: MaaFramework runtime binaries are now downloaded by `sync:runtime` — `deps/` is not needed
-- Old `install*.py` scripts: replaced by `tools/build-release.mjs`
-- `assets/` wrapper: gone, content moved to root-level directories
+`schemaVersion` is 2. A v1 file is never rewritten as a side effect of other commands — migrate it
+explicitly with `--sync config`, and roll back with `--restore <backupId>` if needed.
+
+- `controller.kinds`: `Adb`, `Win32`, `MacOS`, `PlayCover`, `Gamepad`, `Linux`. These are MaaFW's own
+  controller types and are copied into `interface.json` as `type`; `WlRoots` is still accepted and normalized
+  to `Linux`, but the reverse does not hold for older CLIs.
+- `maafw.channel` / `maafw.version` and `runtime.mfa` / `runtime.mxu`: non-empty `version` pins the exact
+  release, empty `version` takes the newest in `channel` (`stable`, `beta`, `alpha`).
+- `resources`: `slug` / `label` / `path` / `enabled`. Paths are written into `interface.json` in config
+  order, and later packs win in MaaFW's resource lookup — order the variants deliberately.
+- `python`: `requiresPython`, `recommendedPython`, `devCommand`; keep `requiresPython` identical to
+  `pyproject.toml`.
+- `project.github`: required for release notes and repo links; `--sync github-url` records it.
+
+Packs present on disk but absent from `resources` are left alone by `--sync`, which is a valid way to keep
+project-private variants out of CMP's control.
+
+### 5. Clean up and verify
+
+```bash
+create-maa-project --doctor --report     # read doctor.checks, fix failures from that evidence
+pnpm install && pnpm check               # formatting, schema, maa checks (dev-tools)
+pnpm release:dry-run                     # packaging smoke test (github add-on)
+```
+
+Treat `pending` entries as follow-up work, not failures: on constrained networks they are the download
+commands to run later (`--skip-download` at create time). Every write command snapshots a backup first, so
+`--list-backups` → `--show-backup <id>` → `--restore <id> --dry-run` is the rollback path.
 
 ## OCR models
 
-If using MaaCommonAssets submodule for OCR, `resource/base/model/ocr/` is generated by `sync:runtime` and should be gitignored. If managing OCR models manually (committed files), do not gitignore.
+Two supply modes, and the layout differs — this is the most common source of "works on my machine" breaks:
 
-## Agent code path updates
+| Mode | Config | `resource/base/model/ocr/` |
+|---|---|---|
+| `submodule` (default when Git is available) | `.gitmodules` + `ocr.submodulePath` (e.g. `MaaCommonAssets/OCR`) | gitignored; copied by `--update ocr-models` |
+| `download` | no `ocr` block required | committed, `manifest.json` records sha256 |
 
-If the project has a Python agent, check for hardcoded paths after migration:
+- `ocr.files` applies to submodule mode only: `{"destName": "path/inside/submodule"}` — the key is a bare
+  filename at the top of `resource/base/model/ocr/`, the value is relative to `ocr.submodulePath`.
+  Inverting them fails the update with a missing-file error.
+- Creating the project inside a parent Git repository always falls back to download mode; passing
+  `CREATE_MAA_PROJECT_OCR_SOURCE=submodule` there is an error, not a fallback.
+- In submodule mode a fresh clone needs the submodule initialized before the models exist.
 
-- Any `assets/` references in agent code need updating to new layout
-- If data moved out of `resource/`, update paths in `runtime_paths.py` or equivalent
-- `bootstrap.py` Python version check must match `pyproject.toml` `requires-python`
+## Agent projects
 
-## interface.json
+- `agent/bootstrap.py` does not exist anymore (CMP 3.5.0). Do not recreate it; `--doctor` reports the legacy
+  file so you can delete it. The Python interpreter check now lives in `maa-project.json` `python` plus
+  `pyproject.toml`.
+- Release packages bundle the Python runtime (Windows embeddable, elsewhere python-build-standalone), so
+  releases no longer install dependencies at first launch. When migrating a project that was packaged the
+  old way: run `--sync` to refresh release tooling, then `--update python-runtime` and
+  `--update python-deps` per target platform before tagging.
+- Fix hardcoded paths after the move — resource, config, debug and data directories moved out of the old
+  `assets/` tree. A `runtime_paths.py`-style module is the usual place; the manifest cache path moves with
+  the data directory.
 
-- Keep the `"version"` field (CMP adds it, build-release requires it)
-- CMP does not manage this file — controller/resource entries must match `maa-project.json` manually (lint warns but allows drift)
+## Pitfalls that actually bit during migration
 
-## Common pitfalls
-
-1. **ocr.files key order**: CMP expects `{"destName": "srcRel"}` (destination filename to source path within submodule). Inverted = ENOENT on sync. Only relevant if `ocr.source = "submodule"`.
-2. **logo.ico not in git**: if the release workflow checks `hashFiles('logo.ico')`, the ico file must be committed — a generated or gitignored ico will cause the icon step to be silently skipped.
-3. **macOS bash 3.2**: GitHub macOS runners use bash 3.2 — no `${var^^}`, use `tr a-z A-Z` for uppercase in workflow scripts.
-4. **CMP version pinning**: `pnpm dlx create-maa-project@latest` may resolve to a stale version; pin in `pnpm-workspace.yaml` `minimumReleaseAgeExclude`.
+1. **`logo.ico` not committed.** The release workflow gates its icon step on `hashFiles('logo.ico')`, and
+   `build-release.mjs` only copies the icon when it exists at the project root. A generated or gitignored
+   ico ships every package without a logo, silently — the step is skipped, not failed.
+2. **`${gui^^}` in the generated Package step.** Uppercasing with `^^` is bash 4 syntax, while macOS runners
+   resolve `bash` to 3.2. Compute it instead: `gui_upper=$(echo "$gui" | tr '[:lower:]' '[:upper:]')` and use
+   `${gui_upper}`. M9A carries exactly this patch over the generated workflow.
+3. **`sync:runtime` is a thin wrapper.** It just invokes the CLI's `--update maafw`, `--update ocr-models`,
+   `--update runtime:mfa`, `--update runtime:mxu`. Do not reimplement downloads inside it — keep
+   project-specific runtime logic in the project's own tooling and let generic fixes be backported.
+4. **pnpm delays fresh releases.** Generated projects pin `create-maa-project` in
+   `pnpm-workspace.yaml` `minimumReleaseAgeExclude` so the CLI and its auto-update can pick up new versions
+   immediately. Keep that entry when migrating; set `CREATE_MAA_PROJECT_AUTO_UPDATE=0` for reproducible or
+   offline runs.
+5. **Schema v1 stays v1 until you say otherwise.** `--sync config` is the only migration path, and created
+   projects carry schema v2 — a mixed pair (old config, new templates) is what `--doctor` complains about.
+6. **Package.json scripts follow the add-ons.** `check` gains `format:check` / `check:schema` / `check:maa`
+   from dev-tools, `release:dry-run` and `sync:runtime` from `github`, and Agent projects add `format:py`,
+   `lint:py`, `typecheck:py`, `check:py`. Migrate hand-written packaging scripts into these targets rather
+   than keeping a parallel CI path.
 
 ## Backporting to create-maa-project
 
-Generic fixes discovered during migration should be backported to CMP templates. Project-specific logic (private module downloads, specific mirrorchyan_rid values, manifest cache generation) stays in the project repo.
+Generic fixes found during a migration (release-workflow portability, template defaults, add-on file lists)
+belong upstream in CMP templates. Project-specific logic — private module downloads, mirrorchyan ids,
+manifest cache generation — stays in the project repository.

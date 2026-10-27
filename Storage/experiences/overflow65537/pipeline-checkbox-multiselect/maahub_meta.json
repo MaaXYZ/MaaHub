@@ -1,0 +1,21 @@
+{
+  "id": "overflow65537/pipeline-checkbox-multiselect",
+  "title": "低代码实现多选框应用",
+  "description": "以《明日方舟：终末地》预刻写属性的基础属性 5 选 3 为例：多选框的 override 会互相覆盖，所以一项一个节点做隔离；And 识别器的 5 个子识别默认直接命中，勾一项就把对应子节点覆盖成 OCR，运行时变成「3 个真实 OCR + 2 个直接命中」。选择部分同理，默认直通、勾选才点。",
+  "author": "overflow65537",
+  "tags": ["pipeline", "checkbox", "interface", "option", "ocr"],
+  "createdAt": "2026-10-27",
+  "updatedAt": "2026-10-27",
+  "version": "0.6.0",
+  "mfwVersion": "5.10.4",
+  "entry": "index.md",
+  "readme": "./index.md",
+  "chapters": [
+    { "title": "需求与做法", "path": "index.md" }
+  ],
+  "status": "beta",
+  "type": "experience",
+  "category": "pipeline",
+  "difficulty": "intermediate",
+  "estimatedTime": "10min"
+}
